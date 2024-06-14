@@ -1,55 +1,70 @@
 using UnityEngine;
-using System.Collections.Generic;
-using System;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager instance;
+    public LevelModel[] levels;
+    private int currentLevelIndex = 0;
     public GameObject playerPrefab;
-    public Transform playerSpawnPoint;
-    public PlayerModel playerModel;
-    public bool spawnEnemies = true;
-    public List<EnemyModel> enemyModels = new List<EnemyModel>();
-    public List<Transform> enemySpawnTransforms = new List<Transform>();
-    public List<Transform> enemyEndTransforms = new List<Transform>();
-    public Dictionary<EnemyModel, List<Transform>> enemyData = new Dictionary<EnemyModel, List<Transform>>();
     public GameObject enemyPrefab;
 
-    private void Start()
-    {
-        // I will make a dictionary for enemyModels and enemyEndTransforms.
-        for (int i = 0; i < enemyModels.Count; i++)
-        {
-            enemyData.Add(enemyModels[i], new List<Transform> { enemySpawnTransforms[i], enemyEndTransforms[i] });
-        }
-        SpawnPlayer();
-        if (spawnEnemies)
-            SpawnEnemies();
-    }
 
-    private void SpawnPlayer()
+    // reference to ui textmeshpro for level name
+    public TMPro.TextMeshProUGUI LevelFinishText;
+
+    private void Awake()
     {
-        if (playerPrefab != null && playerSpawnPoint != null)
+        if (instance == null)
         {
-            GameObject player = Instantiate(playerPrefab, playerSpawnPoint.position, Quaternion.identity, playerSpawnPoint.transform.parent.transform);
-            PlayerView playerView = player.GetComponent<PlayerView>();
-            PlayerController playerController = player.GetComponent<PlayerController>();
-            playerController.Initialize(playerModel, playerView);
+            instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
-            Debug.LogError("PlayerPrefab or PlayerSpawnPoint is not assigned in GameManager.");
+            Destroy(gameObject);
+            return;
         }
     }
 
-    private void SpawnEnemies()
+    private void Start()
     {
-        foreach (var enemy in enemyData)
-        {
+        LoadCurrentLevel();
+    }
 
-            GameObject enemyObject = Instantiate(enemyPrefab, enemy.Value[0].position, Quaternion.identity, enemy.Value[0].transform.parent.transform);
-            EnemyView enemyView = enemyObject.GetComponent<EnemyView>();
-            EnemyController enemyController = enemyObject.GetComponent<EnemyController>();
-            enemyController.Initialize(enemy.Key, enemyView, enemy.Value[0], enemy.Value[1]);
+    public void LoadCurrentLevel()
+    {
+        LevelFinishText.text = "";
+
+        var levelManager = FindObjectOfType<LevelManager>();
+        if (levelManager != null)
+        {
+            levelManager.levelModel = levels[currentLevelIndex];
+            levelManager.SetupLevel();
         }
+        else
+        {
+            Debug.LogError("LevelManager not found in the scene.");
+        }
+    }
+
+    public void LoadNextLevel()
+    {
+        currentLevelIndex = (currentLevelIndex + 1) % levels.Length;
+        string nextLevelName = levels[currentLevelIndex].levelName;
+        SceneManager.LoadScene(nextLevelName);
+    }
+
+    public void FinishLevel()
+    {
+        LevelFinishText.text = "Level Finished!";
+        RestartLevel();
+    }
+
+
+    // to restart the same level after 5 second, call this method
+    public void RestartLevel()
+    {
+        Invoke(nameof(LoadCurrentLevel), 5f);
     }
 }

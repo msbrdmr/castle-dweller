@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 740dae387fcdb354499406ae27a8c6c8, type: 3}
   m_Name: Player
   m_EditorClassIdentifier: 
-  level: 1
-  characterName: Main
+  level: 5
+  id: player
   type: 0
-  rotationSpeed: 10
   movementSpeed: 5
+  rotationSpeed: 10

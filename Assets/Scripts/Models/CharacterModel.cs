@@ -4,7 +4,7 @@ using UnityEngine;
 public class CharacterModel : ScriptableObject
 {
     public int level;
-    public string characterName;
+    public string id;
     public CharacterType type;
     // rotation speed of the character
     public float movementSpeed;

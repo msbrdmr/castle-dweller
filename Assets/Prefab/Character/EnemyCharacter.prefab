@@ -152,6 +152,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b95275ea7fd6d504494f75ba17ad50de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  characterModel: {fileID: 0}
+  LevelTextPrefab: {fileID: 631125931947497834, guid: c2b152da5d9d2334cbf33bbddd1d3668, type: 3}
 --- !u!54 &-8200475477938015183
 Rigidbody:
   m_ObjectHideFlags: 0

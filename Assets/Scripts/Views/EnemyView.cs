@@ -1,11 +1,12 @@
 using UnityEngine;
+using System.Collections;
 
 public class EnemyView : MonoBehaviour
 {
     public Animator animator;
+    private EnemyController enemyController;
+    private bool playerDetected = false; // Flag to check if the player has been detected
 
-
-    //Sight
     // editor header
     [Header("Sight")]
     private MeshFilter sightZoneMeshFilter;
@@ -15,10 +16,11 @@ public class EnemyView : MonoBehaviour
     public LayerMask SightZoneLayers;
     public int SightZoneResolution = 30;
 
-    public void Initialize(EnemyModel model)
+    public void Initialize(EnemyModel model, EnemyController controller)
     {
         sightZoneAngle = model.sightAngle;
         sightZoneRadius = model.sightRadius;
+        enemyController = controller;
     }
 
     private void Start()
@@ -44,11 +46,6 @@ public class EnemyView : MonoBehaviour
         DrawSightZone();
     }
 
-    public void Attack()
-    {
-        TriggerAttackAnimation();
-    }
-
     public void UpdateMovement(float speed)
     {
         animator.SetBool("IsRunning", speed > 0.01f);
@@ -60,6 +57,11 @@ public class EnemyView : MonoBehaviour
         animator.SetTrigger("Attack");
     }
 
+    public void TriggerDeathAnimation()
+    {
+        animator.SetTrigger("Death");
+    }
+
     private void DrawSightZone()
     {
         int[] triangles = new int[(SightZoneResolution - 1) * 3];
@@ -67,9 +69,7 @@ public class EnemyView : MonoBehaviour
         vertices[0] = Vector3.zero;
         float currentAngle = -sightZoneAngle / 2;
         float angleIncrement = sightZoneAngle / (SightZoneResolution - 1);
-
         Vector3 raycastTransform = transform.position + Vector3.up;
-
         for (int i = 0; i < SightZoneResolution; i++)
         {
             float sine = Mathf.Sin(currentAngle);
@@ -82,6 +82,13 @@ public class EnemyView : MonoBehaviour
             if (Physics.Raycast(raycastTransform, raycastDirection, out RaycastHit hit, sightZoneRadius, SightZoneLayers))
             {
                 vertices[i + 1] = vertForward * hit.distance;
+
+                if (hit.collider.gameObject.CompareTag("Player") && !playerDetected)
+                {
+                    Debug.Log("Player is in sight");
+                    playerDetected = true;
+                    enemyController.CollisionWithPlayer(hit.collider);
+                }
             }
             else
             {
@@ -103,4 +110,5 @@ public class EnemyView : MonoBehaviour
         SightZoneMesh.triangles = triangles;
         sightZoneMeshFilter.mesh = SightZoneMesh;
     }
+
 }

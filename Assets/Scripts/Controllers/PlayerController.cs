@@ -1,26 +1,55 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : BaseCharacterController
 {
     private PlayerModel playerModel;
     private PlayerView playerView;
     private Rigidbody _rigidbody;
-    private FixedJoystick joystick;
+    private FloatingJoystick joystick;
+    private GameManager gameManager;
+
+    private int defaultLevel = 5;
+
+    private bool isFinished = false;
     public void Initialize(PlayerModel model, PlayerView view)
     {
-        joystick = FindObjectOfType<FixedJoystick>();
         playerModel = model;
+        playerModel.level = defaultLevel;
+        gameManager = FindObjectOfType<GameManager>();
         playerView = view;
+        joystick = FindObjectOfType<FloatingJoystick>();
         _rigidbody = GetComponent<Rigidbody>();
+        base.Initialize(playerModel);
+    }
+    protected override void Start()
+    {
+        base.Start();
     }
 
-    private void Update()
+    protected override void Update()
     {
+        base.Update();
         HandleRotation();
         HandleAttack();
-    }
 
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            Debug.Log("Level Up!");
+            playerModel.level++;
+            SetLevelText(playerModel.level);
+        }
+        CheckFinish();
+    }
+    // check finish, if global Z is greater than 10.5, then finish the game show level finished text
+    private void CheckFinish()
+    {
+        if (transform.position.z > 9.5f && !isFinished)
+        {
+            gameManager.FinishLevel();
+            isFinished = true;
+        }
+    }
     private void FixedUpdate()
     {
         HandleMovement();
@@ -42,7 +71,7 @@ public class PlayerController : MonoBehaviour
     {
         if (joystick.Horizontal != 0 || joystick.Vertical != 0)
         {
-            Vector3 moveDirection = new Vector3(joystick.Horizontal, 0, joystick.Vertical);
+            Vector3 moveDirection = new(joystick.Horizontal, 0, joystick.Vertical);
             Quaternion newRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, newRotation, playerModel.rotationSpeed * Time.deltaTime);
         }
@@ -56,5 +85,13 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public PlayerModel GetPlayerModel()
+    {
+        return playerModel;
+    }
 
+    public PlayerView GetPlayerView()
+    {
+        return playerView;
+    }
 }
